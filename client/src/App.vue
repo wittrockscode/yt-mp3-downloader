@@ -1,4 +1,3 @@
-
 <template lang="pug">
 .app
   h1.title Youtube MP3 Downloader
@@ -45,6 +44,10 @@ socket.on("finished", (data) => {
   downloadStatus.value = 0;
   isDownloading.value = false;
   statusText.value = "Done!";
+});
+socket.on("dlfinished", (data) => {
+  downloadStatus.value = 0;
+  statusText.value = "Converting to MP3...";
 });
 
 const downloadMP3 = async () => {
