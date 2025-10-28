@@ -1,7 +1,7 @@
 <template lang="pug">
 .app
   h1.title Youtube MP3 Downloader
-  form.download-form(@submit.prevent="downloadMP3")
+  form.download-form(@submit.prevent="initDownload")
     input.text-field(type="text" placeholder="Enter video URL" v-model="videoUrl")
     button.download-button(type="submit") Download
   p.error(v-if="error") {{ error }}
@@ -9,8 +9,19 @@
   .downloading
     span.loader(v-if="isDownloading")
     p.status(v-text="statusText")
-  ul.downloaded-list(v-if="downloaded.length")
-    li(v-for="(item, index) in downloaded" :key="index") {{ item }}
+  template(v-if="queue.length")
+    hr.divider
+    h2 Queued Downloads
+    ol.downloaded-list
+      li(v-for="(item, index) in queue" :key="index")
+        .item
+          spam {{ item }}
+          button.remove(@click="queue.splice(index, 1)") X
+  template(v-if="downloaded.length")
+    hr.divider
+    h2 Downloaded Files
+    ul.downloaded-list(v-if="downloaded.length")
+      li(v-for="(item, index) in downloaded" :key="index") {{ item }}
 </template>
 
 <script setup lang="ts">
@@ -25,6 +36,7 @@ const sessionId = Math.random().toString(36).substring(2, 9);
 const statusText = ref("");
 const error = ref("");
 const downloaded = ref<string[]>([]);
+const queue = ref<string[]>([]);
 
 socket.connect();
 socket.emit("register", sessionId);
@@ -44,20 +56,38 @@ socket.on("finished", (data) => {
   downloadStatus.value = 0;
   isDownloading.value = false;
   statusText.value = "Done!";
+  if (queue.value.length > 0) {
+    const nextUrl = queue.value.shift()!;
+    downloadMP3(nextUrl);
+  }
 });
 socket.on("dlfinished", (data) => {
   downloadStatus.value = 0;
   statusText.value = "Converting to MP3...";
 });
 
-const downloadMP3 = async () => {
+const initDownload = () => {
+  if (!videoUrl.value || videoUrl.value.trim() === "") {
+    error.value = "Please enter a video URL.";
+    return;
+  }
+  if (isDownloading.value) {
+    queue.value.push(videoUrl.value);
+  } else {
+    downloadMP3(videoUrl.value);
+  }
+
+  videoUrl.value = "";
+};
+
+const downloadMP3 = async (dl_url: string) => {
   error.value = "";
   const response = await fetch("/api/download", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ url: videoUrl.value, sessionId }),
+    body: JSON.stringify({ url: dl_url, sessionId }),
   });
 
   if (!response.ok) {
@@ -80,12 +110,40 @@ const downloadMP3 = async () => {
   window.URL.revokeObjectURL(url);
   downloaded.value.push(fileTitle.value);
   fileTitle.value = "audio.mp3";
-  videoUrl.value = "";
   isDownloading.value = false;
 };
 </script>
 
 <style lang="scss" scoped>
+h2 {
+  text-align: left;
+  font-size: 20px;
+  color: #333;
+  font-weight: bold;
+}
+
+.divider {
+  margin: 1em 0;
+  border: none;
+  border-top: 1px solid #201d1d;
+}
+.remove {
+  margin-left: 10px;
+  background: #ff4d4d;
+  border: none;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 2px 6px;
+  font-size: 12px;
+  &:hover {
+    background: #e60000;
+  }
+}
+.item {
+  display: flex;
+  align-items: center;
+}
 .app {
   max-width: max(80vw, 900px);
   margin: 5em auto;
