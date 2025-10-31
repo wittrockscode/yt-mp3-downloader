@@ -3,6 +3,8 @@ import { fileURLToPath, URL } from 'node:url';
 import vue from '@vitejs/plugin-vue';
 import { defineConfig, loadEnv } from 'vite';
 
+import svgLoader from 'vite-svg-loader'
+
 // <https://vitejs.dev/config/>
 export default defineConfig((env) => {
   const envars = loadEnv(env.mode, './');
@@ -19,7 +21,7 @@ export default defineConfig((env) => {
       __API_PATH__: JSON.stringify(serverAPIPath),
     },
 
-    plugins: [vue()],
+    plugins: [vue(), svgLoader()],
     resolve: {
       alias: {
         '@': fileURLToPath(new URL('./src', import.meta.url)),
@@ -29,7 +31,10 @@ export default defineConfig((env) => {
     server: {
       port: 5173,
       proxy: {
-        [serverAPIPath]: serverURL.origin,
+        [serverAPIPath]: {
+          target: serverURL.origin,
+          changeOrigin: true,
+        },
       },
     },
   };

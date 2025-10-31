@@ -2,6 +2,7 @@ import cors from 'cors';
 import 'dotenv/config';
 import express from 'express';
 import download_route from './download';
+import info_route from './info';
 import http from 'http';
 import { Server } from "socket.io";
 
@@ -32,6 +33,7 @@ app.use(express.urlencoded({ extended: true }));
 const PORT = process.env.PORT || 3001;
 
 app.use("/api/download", download_route);
+app.use("/api/info", info_route);
 
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
