@@ -1,5 +1,6 @@
 # Youtube Downloader
 A simple application to download audio from YouTube videos.
+Available at: [y2a.rip](https://y2a.rip)
 
 ## Setup
 1. Clone the repo
