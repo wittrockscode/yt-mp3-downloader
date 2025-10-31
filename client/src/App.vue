@@ -1,7 +1,7 @@
 <template lang="pug">
 .app
   .content
-    h1.title YouTube 2 Audio
+    h1.title YouTube 2 Mp3 Downloader
     VideoInput(
       v-model="videoUrl"
       :loading="loading"
