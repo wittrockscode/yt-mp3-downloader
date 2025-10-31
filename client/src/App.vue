@@ -1,254 +1,108 @@
 <template lang="pug">
 .app
-  h1.title Youtube MP3 Downloader
-  form.download-form(@submit.prevent="initDownload")
-    input.text-field(type="text" placeholder="Enter video URL" v-model="videoUrl")
-    button.download-button(type="submit") Download
-  p.error(v-if="error") {{ error }}
-  p.video-title(v-if="isDownloading && fileTitle !== 'audio.mp3'") Downloading: {{ fileTitle }}
-  .downloading
-    span.loader(v-if="isDownloading")
-    p.status(v-text="statusText")
-  template(v-if="queue.length")
-    hr.divider
-    h2 Queued Downloads
-    ol.downloaded-list
-      li(v-for="(item, index) in queue" :key="index")
-        .item
-          spam {{ item }}
-          button.remove(@click="queue.splice(index, 1)") X
-  template(v-if="downloaded.length")
-    hr.divider
-    h2 Downloaded Files
-    ul.downloaded-list(v-if="downloaded.length")
-      li(v-for="(item, index) in downloaded" :key="index") {{ item }}
+  .content
+    h1.title YouTube 2 Audio Downloader
+    VideoInput(
+      v-model="videoUrl"
+      :loading="loading"
+      :error-text="errorText"
+      @add-video="init_video_info"
+    )
+    .queue
+      VideoCard(
+        v-for="(video, index) in queue"
+        :key="index"
+        :video="video"
+        @download-video="download_video"
+        @remove-video="remove_video"
+      )
 </template>
 
 <script setup lang="ts">
+import type { Video } from '@/composables/use-videos';
 import { ref } from 'vue';
 import { socket } from "@/socket";
+import { generate_downloadable_file } from './composables/helper';
+import { sessionId } from '@/socket';
+import { useVideos } from './composables/use-videos';
+import { useApi } from './composables/use-api';
+import VideoInput from './components/video-input.vue';
+import VideoCard from './components/video-card.vue';
 
-const videoUrl = ref('');
-const fileTitle = ref('audio.mp3');
-const downloadStatus = ref(0);
-const isDownloading = ref(false);
-const sessionId = Math.random().toString(36).substring(2, 9);
-const statusText = ref("");
-const error = ref("");
-const downloaded = ref<string[]>([]);
-const queue = ref<string[]>([]);
+const { removeVideo, createVideo, queue } = useVideos();
+const { downloadAsMp3, getVideoInfo } = useApi();
 
-socket.connect();
-socket.emit("register", sessionId);
+const videoUrl = ref<string>('');
+const loading = ref<boolean>(false);
+const errorText = ref<string | null>(null);
 
-socket.on("title", (data) => {
-  fileTitle.value = data.message + ".mp3";
-});
-socket.on("initializing", (data) => {
-  isDownloading.value = true;
-  statusText.value = "Initializing...";
-});
-socket.on("status", (data) => {
-  downloadStatus.value = data.message;
-  statusText.value = `Downloading: ${downloadStatus.value}%`;
-});
-socket.on("finished", (data) => {
-  downloadStatus.value = 0;
-  isDownloading.value = false;
-  statusText.value = "Done!";
-  if (queue.value.length > 0) {
-    const nextUrl = queue.value.shift()!;
-    downloadMP3(nextUrl);
-  }
-});
-socket.on("dlfinished", (data) => {
-  downloadStatus.value = 0;
-  statusText.value = "Converting to MP3...";
-});
-
-const initDownload = () => {
-  if (!videoUrl.value || videoUrl.value.trim() === "") {
-    error.value = "Please enter a video URL.";
-    return;
-  }
-  if (isDownloading.value) {
-    queue.value.push(videoUrl.value);
-  } else {
-    downloadMP3(videoUrl.value);
-  }
-
-  videoUrl.value = "";
-};
-
-const downloadMP3 = async (dl_url: string) => {
-  error.value = "";
-  const response = await fetch("/api/download", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ url: dl_url, sessionId }),
-  });
-
+const init_video_info = async (url: string) => {
+  loading.value = true;
+  const response = await getVideoInfo(url);
   if (!response.ok) {
-    const err = await response.text();
-    error.value = err || "Download failed";
-    isDownloading.value = false;
-    statusText.value = "";
+    const errorData = await response.json();
+    errorText.value = errorData.message || 'Failed to fetch video info.';
+    loading.value = false;
     return;
   }
-
-  const blob = await response.blob();
-  const newBlob = new Blob([blob]);
-  const url = window.URL.createObjectURL(newBlob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = fileTitle.value;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  window.URL.revokeObjectURL(url);
-  downloaded.value.push(fileTitle.value);
-  fileTitle.value = "audio.mp3";
-  isDownloading.value = false;
+  const videoInfoJson = await response.json();
+  createVideo(videoInfoJson);
+  loading.value = false;
+  videoUrl.value = '';
 };
+
+const remove_video = (video: Video) => {
+  const index = queue.value.indexOf(video);
+  removeVideo(index);
+};
+
+const download_video = async (video: Video) => {
+  const response = await downloadAsMp3(video);
+  if (!response.ok) {
+    video.error = 'Failed to download video.';
+    return;
+  }
+  const blob = await response.blob();
+  generate_downloadable_file(blob, `${video.title}.mp3`);
+};
+
 </script>
 
 <style lang="scss" scoped>
-h2 {
-  text-align: left;
-  font-size: 20px;
-  color: #333;
-  font-weight: bold;
-}
-
-.divider {
-  margin: 1em 0;
-  border: none;
-  border-top: 1px solid #201d1d;
-}
-.remove {
-  margin-left: 10px;
-  background: #ff4d4d;
-  border: none;
-  color: white;
-  border-radius: 4px;
-  cursor: pointer;
-  padding: 2px 6px;
-  font-size: 12px;
-  &:hover {
-    background: #e60000;
-  }
-}
-.item {
-  display: flex;
-  align-items: center;
-}
 .app {
-  max-width: max(80vw, 900px);
-  margin: 5em auto;
-  padding: 20px;
-  border: 1px solid #ccccccff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  background-color: #f9f9f9;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: stretch;
+}
+.content {
+  max-width: 95vw;
+}
+@media screen and (min-width: 600px) {
+  .content {
+    max-width: 50rem;
+  }
 }
 .title {
-  text-align: center;
-  font-size: 32px;
-  margin-bottom: 20px;
-  color: #333;
-  font-weight: bold;
-}
-.download-form {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-}
-.text-field {
-  width: 100%;
-  height: 44px;
-  padding: 10px;
-  border: 1px solid #ccc;
-  color: #333;
-  margin-right: 10px;
-  border-radius: 4px;
-  font-size: 16px;
-  box-sizing: border-box;
-  &:focus {
-    border-color: #38ef7d;
-    outline: none;
-    box-shadow: 0 0 5px rgba(56, 239, 125, 0.5);
-  }
-}
-.download-button {
-  height: 44px;
-  padding: 0 20px;
-  background: linear-gradient(90deg, #38ef7d 0%, #11998e 100%);
-  color: #fcfcfcff;
-  border: none;
-  border-radius: 4px;
-  font-size: 20px;
-  cursor: pointer;
-  box-shadow: 0 4px 14px 0 rgba(56,239,125,0.15);
-  transition:  all 0.3s ease;
-  font-weight: bold;
-  letter-spacing: 1px;
-  display: flex;
-  align-items: center;
-  &:hover {
-    transform: scale(1.04);
-  }
-  &:disabled {
-    background: #ccc;
-    cursor: not-allowed;
-    box-shadow: none;
-  }
-}
-.status {
-  font-size: 20px;
-  color: #555;
-}
-.video-title {
   text-align: left;
-  margin-bottom: 20px;
-  font-size: 12px;
-  color: #333;
+  font-size: 3rem;
+  color: #EAEAEA;
+  font-weight: bold;
+  margin-bottom: 2rem;
+  text-shadow: 0 0 1px #000;
 }
-.error {
-  color: red;
-  margin-bottom: 10px;
+.queue {
+  margin-top: 2rem;
 }
-.downloaded-list {
-  margin-top: 20px;
-  padding-left: 20px;
-  list-style-type: disc;
-  color: #333;
-}
-.loader {
-  width: 30px;
-  height: 30px;
-  border: 3px solid;
-  border-color: #006622ff transparent;
-  border-radius: 50%;
-  display: inline-block;
-  box-sizing: border-box;
-  animation: rotation 1s linear infinite;
-}
-.downloading {
-  margin-top: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 10px;
-}
-
-@keyframes rotation {
-  0% {
-    transform: rotate(0deg);
+@media screen and (min-width: 600px) {
+  .title {
+    text-align: left;
+    margin-top: 20px;
+    font-size: 4rem;
+    color: #EAEAEA;
+    font-weight: bold;
+    margin-bottom: 2rem;
+    text-shadow: 0 0 1px #000;
   }
-  100% {
-    transform: rotate(360deg);
-  }
-} 
+}
 </style>
