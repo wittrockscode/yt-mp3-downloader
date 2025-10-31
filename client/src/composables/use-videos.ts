@@ -12,6 +12,8 @@ export type Video = {
   error?: string | null;
   status?: string | null;
   id: string;
+  blob?: Blob;
+  fullTitle?: string;
 };
 
 const videoTemplate = (url: string, title: string, length: string, thumbnailURL: string, creator: string, id: string) => {
@@ -26,6 +28,7 @@ const videoTemplate = (url: string, title: string, length: string, thumbnailURL:
     downloadFinished: false,
     error: null,
     id,
+    fullTitle: creator ? `${title} - ${creator}` : title,
   } as Video;
 };
 

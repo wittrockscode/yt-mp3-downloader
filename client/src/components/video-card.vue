@@ -4,7 +4,7 @@ template(v-if="largeScreen")
     .video-card
       .progress-bar(:style="{ width: video.progress + '%' }")
       img.thumbnail(:src="video.thumbnailURL" :alt="`Thumbnail for ${video.title}`")
-      .title {{ video_name }}
+      .title {{ video.fullTitle }}
       .controls
         .length
           ClockIcon.icon.clock(width="24" height="24")
@@ -28,7 +28,7 @@ template(v-if="largeScreen")
 template(v-else)
   .wrapper
     .elements
-      .title {{ video_name }}
+      .title {{ video.fullTitle }}
       .video-card
         .progress-bar(:style="{ width: video.progress + '%' }")
         img.thumbnail(:src="video.thumbnailURL" :alt="`Thumbnail for ${video.title}`")
@@ -55,7 +55,6 @@ template(v-else)
 
 <script setup lang="ts">
 import type { Video } from '@/composables/use-videos';
-import { computed } from 'vue';
 import LoadingSpinner from './loading-spinner.vue';
 import ClockIcon from '../assets/clock.svg';
 import RemoveIcon from '../assets/remove.svg';
@@ -68,9 +67,6 @@ defineEmits<{
 const props = defineProps<{
   video: Video;
 }>();
-const video_name = computed(() => {
-  return props.video.creator ? `${props.video.title} - ${props.video.creator}` : props.video.title;
-});
 
 const largeScreen = window.matchMedia('(min-width: 600px)').matches;
 </script>

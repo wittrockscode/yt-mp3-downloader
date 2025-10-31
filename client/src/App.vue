@@ -21,9 +21,8 @@
 <script setup lang="ts">
 import type { Video } from '@/composables/use-videos';
 import { ref } from 'vue';
-import { socket } from "@/socket";
+import { socket, sessionId } from "@/socket";
 import { generate_downloadable_file } from './composables/helper';
-import { sessionId } from '@/socket';
 import { useVideos } from './composables/use-videos';
 import { useApi } from './composables/use-api';
 import VideoInput from './components/video-input.vue';
@@ -57,13 +56,19 @@ const remove_video = (video: Video) => {
 };
 
 const download_video = async (video: Video) => {
+  if (video.blob) {
+    generate_downloadable_file(video.blob, `${video.fullTitle}.mp3`);
+    return;
+  }
   const response = await downloadAsMp3(video);
   if (!response.ok) {
-    video.error = 'Failed to download video.';
+    const errorData = await response.json();
+    video.error = errorData.message || 'Failed to download video.';
     return;
   }
   const blob = await response.blob();
-  generate_downloadable_file(blob, `${video.title}.mp3`);
+  video.blob = blob;
+  generate_downloadable_file(blob, `${video.fullTitle}.mp3`);
 };
 
 </script>

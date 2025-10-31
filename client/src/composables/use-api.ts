@@ -11,7 +11,7 @@ export const useApi = () => {
       body: JSON.stringify({
         url: video.url,
         sessionId,
-        title: video.creator ? `${video.title} - ${video.creator}` : video.title,
+        title: video.fullTitle,
         id: video.id,
       }),
     });
