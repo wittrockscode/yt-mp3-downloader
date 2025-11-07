@@ -38,7 +38,23 @@ const videoUrl = ref<string>('');
 const loading = ref<boolean>(false);
 const errorText = ref<string | null>(null);
 
+const valid_domain = (url: string): boolean => {
+  if (!url) return false;
+  try {
+    const parsedUrl = new URL(url);
+    return parsedUrl.hostname === 'www.youtube.com' || parsedUrl.hostname === 'youtu.be';
+  } catch {
+    return false;
+  }
+};
+
 const init_video_info = async (url: string) => {
+  if (!valid_domain(url)) {
+    errorText.value = 'Please enter a valid YouTube URL.';
+    videoUrl.value = '';
+    return;
+  }
+  errorText.value = null;
   loading.value = true;
   const response = await getVideoInfo(url);
   if (!response.ok) {
