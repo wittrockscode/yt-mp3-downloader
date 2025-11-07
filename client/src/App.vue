@@ -1,7 +1,10 @@
 <template lang="pug">
 .app
   .content
-    h1.title YouTube 2 mp3 Downloader
+    h1.title
+      | YouTube 2 audio
+      br
+      | mp3 downloader
     VideoInput(
       v-model="videoUrl"
       :loading="loading"
@@ -82,6 +85,7 @@ const download_video = async (video: Video) => {
 }
 .content {
   max-width: 95vw;
+  width: 100%;
 }
 @media screen and (min-width: 600px) {
   .content {
