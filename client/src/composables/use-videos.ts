@@ -14,6 +14,7 @@ export type Video = {
   id: string;
   blob?: Blob;
   fullTitle?: string;
+  duplicateAnimation: boolean;
 };
 
 const videoTemplate = (url: string, title: string, length: string, thumbnailURL: string, creator: string, id: string) => {
@@ -29,6 +30,7 @@ const videoTemplate = (url: string, title: string, length: string, thumbnailURL:
     error: null,
     id,
     fullTitle: creator ? `${title} - ${creator}` : title,
+    duplicateAnimation: false,
   } as Video;
 };
 
@@ -43,7 +45,7 @@ export const useVideos = () => {
         videoInfoJson.duration_string,
         videoInfoJson.thumbnails?.length ? videoInfoJson.thumbnails[0].url : '',
         videoInfoJson.uploader,
-        videoInfoJson.display_id,
+        videoInfoJson.id,
       )
     );
   }

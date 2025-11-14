@@ -1,6 +1,6 @@
 <template lang="pug">
 template(v-if="largeScreen")
-  .wrapper
+  .wrapper(:class="{ 'duplicate-animation': duplicateAnimation }")
     .video-card
       .progress-bar(:style="{ width: video.progress + '%' }")
       img.thumbnail(:src="video.thumbnailURL" :alt="`Thumbnail for ${video.title}`")
@@ -55,6 +55,7 @@ template(v-else)
 
 <script setup lang="ts">
 import type { Video } from '@/composables/use-videos';
+import { toRefs, watch } from 'vue';
 import LoadingSpinner from './loading-spinner.vue';
 import ClockIcon from '../assets/clock.svg';
 import RemoveIcon from '../assets/remove.svg';
@@ -68,10 +69,31 @@ const props = defineProps<{
   video: Video;
 }>();
 
+const { duplicateAnimation } = toRefs(props.video);
+
+watch(duplicateAnimation, (newVal) => {
+  if (newVal) {
+    setTimeout(() => {
+      props.video.duplicateAnimation = false;
+    }, 500);
+  }
+});
+
 const largeScreen = window.matchMedia('(min-width: 600px)').matches;
 </script>
 
 <style scoped>
+.duplicate-animation {
+  animation: duplicate-flash 0.5s ease-in-out;
+}
+@keyframes duplicate-flash {
+  0%, 100% {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+  50% {
+    background-color: rgba(255, 255, 255, 0.3);
+  }
+}
 .wrapper {
   margin-bottom: 0.75rem;
   margin-top: 0.75rem;

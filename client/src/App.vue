@@ -64,9 +64,15 @@ const init_video_info = async (url: string) => {
     return;
   }
   const videoInfoJson = await response.json();
-  createVideo(videoInfoJson);
   loading.value = false;
   videoUrl.value = '';
+
+  const duplicateVideo = queue.value.find(v => v.id === videoInfoJson.id);
+  if (duplicateVideo) {
+    duplicateVideo.duplicateAnimation = true;
+    return;
+  }
+  createVideo(videoInfoJson);
 };
 
 const remove_video = (video: Video) => {
