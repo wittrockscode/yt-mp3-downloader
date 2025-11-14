@@ -10,7 +10,6 @@ const incorrectUrl = (url: string | undefined) => {
   return !urlPattern.test(url);
 };
 
-
 const ytdlp = new YtDlp({
   ffmpegPath: ffmpegPath,
 });

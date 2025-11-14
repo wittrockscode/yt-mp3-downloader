@@ -1,8 +1,10 @@
 import { reactive } from "vue";
 import { io } from "socket.io-client";
 import { useVideos } from "./composables/use-videos";
+import { usePlaylists } from "./composables/use-playlists";
 
-const { queue } = useVideos();
+const { videos } = useVideos();
+const { playlists } = usePlaylists();
 
 const URL = import.meta.env.VITE_SERVER_URL ?? "http://localhost:3001";
 
@@ -26,7 +28,9 @@ socket.on("disconnect", () => {
 
 socket.on("initializing", (data: any) => {
   const { id } = data.message;
-  const video = queue.value.find((v) => v.id === id);
+  const video = videos.value.find((v) => v.id === id) || playlists.value
+    .flatMap(p => p.videos)
+    .find((v) => v.id === id);
   if (video) {
     video.isDownloading = true;
     video.progress = 0;
@@ -37,7 +41,9 @@ socket.on("initializing", (data: any) => {
 
 socket.on("status", (data: any) => {
   const { id, progress } = data.message;
-  const video = queue.value.find((v) => v.id === id);
+  const video = videos.value.find((v) => v.id === id) || playlists.value
+    .flatMap(p => p.videos)
+    .find((v) => v.id === id);
   if (video) {
     video.progress = progress;
     video.status = `Downloading... ${progress.toFixed(2)}%`;
@@ -46,7 +52,9 @@ socket.on("status", (data: any) => {
 
 socket.on("dlfinished", (data: any) => {
   const { id } = data.message;
-  const video = queue.value.find((v) => v.id === id);
+  const video = videos.value.find((v) => v.id === id) || playlists.value
+    .flatMap(p => p.videos)
+    .find((v) => v.id === id);
   if (video) {
     video.progress = 100;
     video.status = "Processing...";
@@ -55,7 +63,9 @@ socket.on("dlfinished", (data: any) => {
 
 socket.on("finished", (data: any) => {
   const { id } = data.message;
-  const video = queue.value.find((v) => v.id === id);
+  const video = videos.value.find((v) => v.id === id) || playlists.value
+    .flatMap(p => p.videos)
+    .find((v) => v.id === id);
   if (video) {
     video.isDownloading = false;
     video.progress = 0;

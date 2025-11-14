@@ -11,13 +11,22 @@
       :error-text="errorText"
       @add-video="init_video_info"
     )
-    .queue
+    .videos
       VideoCard(
-        v-for="(video, index) in queue"
+        v-for="(video, index) in videos"
         :key="index"
         :video="video"
         @download-video="download_video"
         @remove-video="remove_video"
+      )
+    .playlists
+      PlaylistCard(
+        v-for="(playlist, index) in playlists"
+        :key="index"
+        :playlist="playlist"
+        @remove-playlist-entry="(e) => removePlaylistEntry(playlist, e)"
+        @download-playlist-entry="(e) => download_video(e)"
+        @remove-playlist="(e) => removePlaylist(e)"
       )
 </template>
 
@@ -26,12 +35,15 @@ import type { Video } from '@/composables/use-videos';
 import { ref } from 'vue';
 import { socket, sessionId } from "@/socket";
 import { generate_downloadable_file } from './composables/helper';
-import { useVideos } from './composables/use-videos';
+import { useVideos, createVideo } from './composables/use-videos';
+import { usePlaylists, createPlaylist } from './composables/use-playlists';
 import { useApi } from './composables/use-api';
 import VideoInput from './components/video-input.vue';
 import VideoCard from './components/video-card.vue';
+import PlaylistCard from './components/playlist-card.vue';
 
-const { removeVideo, createVideo, queue } = useVideos();
+const { removeVideo, addVideo, videos } = useVideos();
+const { removePlaylist, addPlaylist, removePlaylistEntry, playlists } = usePlaylists();
 const { downloadAsMp3, getVideoInfo } = useApi();
 
 const videoUrl = ref<string>('');
@@ -59,24 +71,34 @@ const init_video_info = async (url: string) => {
   const response = await getVideoInfo(url);
   if (!response.ok) {
     const errorData = await response.json();
-    errorText.value = errorData.message || 'Failed to fetch video info.';
+    errorText.value = errorData || 'Failed to fetch video info.';
     loading.value = false;
+    videoUrl.value = '';
     return;
   }
   const videoInfoJson = await response.json();
   loading.value = false;
   videoUrl.value = '';
 
-  const duplicateVideo = queue.value.find(v => v.id === videoInfoJson.id);
-  if (duplicateVideo) {
-    duplicateVideo.duplicateAnimation = true;
-    return;
+  if (videoInfoJson._type === 'playlist') {
+    const duplicatePlaylist = playlists.value.find(p => p.id === videoInfoJson.id);
+    if (duplicatePlaylist) {
+      duplicatePlaylist.duplicateAnimation = true;
+      return;
+    }
+    addPlaylist(createPlaylist(videoInfoJson));
+  } else {
+    const duplicateVideo = videos.value.find(v => v.id === videoInfoJson.id);
+    if (duplicateVideo) {
+      duplicateVideo.duplicateAnimation = true;
+      return;
+    }
+    addVideo(createVideo(videoInfoJson));
   }
-  createVideo(videoInfoJson);
 };
 
 const remove_video = (video: Video) => {
-  const index = queue.value.indexOf(video);
+  const index = videos.value.indexOf(video);
   removeVideo(index);
 };
 
@@ -122,7 +144,7 @@ const download_video = async (video: Video) => {
   margin-bottom: 2rem;
   text-shadow: 0 0 1px #000;
 }
-.queue {
+.videos {
   margin-top: 2rem;
 }
 @media screen and (min-width: 600px) {

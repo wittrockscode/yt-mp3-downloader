@@ -34,34 +34,31 @@ const videoTemplate = (url: string, title: string, length: string, thumbnailURL:
   } as Video;
 };
 
-const queue = ref<Array<Video>>([]);
+export const createVideo = (videoInfoJson: any) => {
+  return videoTemplate(
+    videoInfoJson.original_url,
+    videoInfoJson.title,
+    videoInfoJson.duration,
+    videoInfoJson.thumbnails?.length ? videoInfoJson.thumbnails[0].url : '',
+    videoInfoJson.uploader,
+    videoInfoJson.id,
+  );
+};
+
+const videos = ref<Array<Video>>([]);
 
 export const useVideos = () => {
-  const createVideo = (videoInfoJson: any) => {
-    addVideo(
-      videoTemplate(
-        videoInfoJson.original_url,
-        videoInfoJson.title,
-        videoInfoJson.duration,
-        videoInfoJson.thumbnails?.length ? videoInfoJson.thumbnails[0].url : '',
-        videoInfoJson.uploader,
-        videoInfoJson.id,
-      )
-    );
-  }
-
   const addVideo = (video: Video) => {
-    queue.value.push(video);
+    videos.value.push(video);
   };
 
   const removeVideo = (index: number) => {
-    queue.value.splice(index, 1);
+    videos.value.splice(index, 1);
   };
 
   return {
-    queue,
+    videos,
     addVideo,
     removeVideo,
-    createVideo,
   };
 };
