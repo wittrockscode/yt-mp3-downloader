@@ -8,7 +8,7 @@ template(v-if="largeScreen")
       .controls
         .length
           ClockIcon.icon.clock(width="24" height="24")
-          | {{ video.length }}
+          | {{ secondsToHms(video.length) }}
         button.download-button(@click="$emit('download-video', video)" :disabled="video.isDownloading")
           template(v-if="video.isDownloading")
             LoadingSpinner
@@ -26,7 +26,7 @@ template(v-if="largeScreen")
     template(v-else-if="video.status")
       .status-text {{ video.status }}
 template(v-else)
-  .wrapper
+  .wrapper(:class="{ 'duplicate-animation': duplicateAnimation }")
     .elements
       .title {{ video.fullTitle }}
       .video-card
@@ -34,7 +34,7 @@ template(v-else)
         img.thumbnail(:src="video.thumbnailURL" :alt="`Thumbnail for ${video.title}`")
         .length
           ClockIcon.icon.clock(width="24" height="24")
-          | {{ video.length }}
+          | {{ secondsToHms(video.length) }}
         button.download-button(@click="$emit('download-video', video)" :disabled="video.isDownloading")
           template(v-if="video.isDownloading")
             LoadingSpinner
@@ -61,6 +61,7 @@ import ClockIcon from '../assets/clock.svg';
 import RemoveIcon from '../assets/remove.svg';
 import DownloadIcon from '../assets/download.svg';
 import CheckIcon from '../assets/check.svg';
+import { secondsToHms } from '@/composables/helper';
 defineEmits<{
   (e: 'remove-video', value: Video): void;
   (e: 'download-video', value: Video): void;

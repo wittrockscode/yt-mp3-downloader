@@ -42,7 +42,7 @@ export const useVideos = () => {
       videoTemplate(
         videoInfoJson.original_url,
         videoInfoJson.title,
-        videoInfoJson.duration_string,
+        videoInfoJson.duration,
         videoInfoJson.thumbnails?.length ? videoInfoJson.thumbnails[0].url : '',
         videoInfoJson.uploader,
         videoInfoJson.id,
