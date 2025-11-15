@@ -1,5 +1,5 @@
 <template lang="pug">
-.progress-bar(:style="{ width: progress + '%' }")
+.progress-bar(:style="{ width: progress + '%' }" v-if="progress > 0 && progress <= 100")
 </template>
 
 <script setup lang="ts">

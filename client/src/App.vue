@@ -45,7 +45,7 @@ import PlaylistCard from './components/playlist-card.vue';
 
 const { removeVideo, addVideo, videos } = useVideos();
 const { removePlaylist, addPlaylist, removePlaylistEntry, playlists } = usePlaylists();
-const { downloadAsMp3, downloadPlaylistAsZip, getVideoInfo } = useApi();
+const { downloadAsMp3, initPlaylistDownload, getVideoInfo } = useApi();
 
 const videoUrl = ref<string>('');
 const loading = ref<boolean>(false);
@@ -125,15 +125,12 @@ const download_playlist = async (playlist: Playlist) => {
     return;
   }
 
-  const response = await downloadPlaylistAsZip(playlist);
+  const response = await initPlaylistDownload(playlist);
   if (!response.ok) {
     const errorData = await response.json();
-    playlist.error = errorData.message || 'Failed to download playlist.';
+    playlist.error = errorData.message || 'Failed to start playlist download.';
     return;
   }
-  const blob = await response.blob();
-  playlist.blob = blob;
-  generate_downloadable_file(blob, `${playlist.title}.zip`);
 };
 
 </script>

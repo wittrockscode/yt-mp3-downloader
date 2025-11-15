@@ -2,9 +2,12 @@ import { reactive } from "vue";
 import { io } from "socket.io-client";
 import { useVideos } from "./composables/use-videos";
 import { usePlaylists } from "./composables/use-playlists";
+import { useApi } from "./composables/use-api";
+import { generate_downloadable_file } from './composables/helper';
 
 const { videos } = useVideos();
 const { playlists } = usePlaylists();
+const { downloadPlaylistAsZip } = useApi();
 
 const URL = import.meta.env.VITE_SERVER_URL ?? "http://localhost:3001";
 
@@ -90,27 +93,29 @@ socket.on("playlist_status", (data: any) => {
   const playlist = playlists.value.find((p) => p.id === id);
   if (playlist) {
     playlist.progress = progress;
-    playlist.status = `Downloading... ${progress.toFixed(2)}%`;
+    playlist.status = `${progress < 50 ? "Downloading..." : "Processing..."} ${progress.toFixed(2)}%`;
   }
 });
 
-socket.on("playlist_dlfinished", (data: any) => {
-  const { id } = data.message;
+socket.on("playlist_error", (data: any) => {
+  const { id, error } = data.message;
   const playlist = playlists.value.find((p) => p.id === id);
-  if (playlist) {
-    playlist.progress = 100;
-    playlist.status = "Processing...";
-  }
+  if (playlist) playlist.error = error;
 });
 
-socket.on("playlist_finished", (data: any) => {
+socket.on("playlist_dl_ready", async (data: any) => {
   const { id } = data.message;
   const playlist = playlists.value.find((p) => p.id === id);
   if (playlist) {
+    playlist.status = "Preparing download...";
+    const response = await downloadPlaylistAsZip(playlist);
     playlist.isDownloading = false;
     playlist.progress = 0;
     playlist.downloadFinished = true;
     playlist.status = null;
+    const blob = await response.blob();
+    playlist.blob = blob;
+    generate_downloadable_file(blob, `${playlist.title}.zip`);
   }
 });
 
