@@ -9,13 +9,14 @@
       v-for="(video, index) in playlist.videos"
       :key="index"
       :video="video"
+      :id="video.id"
       @remove-video="$emit('remove-playlist-entry', video)"
       @download-video="$emit('download-playlist-entry', video)"
     )
 </template>
 
 <script setup lang="ts">
-import { toRefs, watch, computed } from 'vue';
+import { toRefs, watch, computed, onMounted } from 'vue';
 import type { Playlist } from '@/composables/use-playlists';
 import type { Video } from '@/composables/use-videos';
 import VideoCard from './video-card.vue';
@@ -43,6 +44,19 @@ watch(duplicateAnimation, (newVal) => {
   }
 });
 const largeScreen = window.matchMedia('(min-width: 600px)').matches;
+
+onMounted(() => {
+  if (props.playlist.original_url) {
+    const item_to_scroll_to = props.playlist.videos.find(video => video.url === props.playlist.original_url);
+    if (item_to_scroll_to) {
+      const element = document.getElementById(item_to_scroll_to.id);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        item_to_scroll_to.duplicateAnimation = true;
+      }
+    }
+  }
+});
 </script>
 
 <style scoped>
@@ -84,6 +98,12 @@ const largeScreen = window.matchMedia('(min-width: 600px)').matches;
   border-radius: 4px;
   color: #FF2E63;
   width: 2.5rem;
+}
+.videos {
+  max-height: 15rem;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #555 transparent;
 }
 @media screen and (min-width: 600px) {
   .remove-button {

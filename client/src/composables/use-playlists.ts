@@ -8,19 +8,23 @@ export type Playlist = {
   creator?: string;
   videos: Array<Video>;
   duplicateAnimation: boolean;
+  original_url: string | null;
 };
 
-export const createPlaylist = (playlistInfoJson: any): Playlist => {
+export const createPlaylist = (playlistInfoJson: any, original_url: string | null = null): Playlist => {
   return {
     title: playlistInfoJson.title,
     videoCount: playlistInfoJson.entries?.length || 0,
     id: playlistInfoJson.id,
     creator: playlistInfoJson.uploader,
-    videos: playlistInfoJson.entries?.map((videoJson: any) => {
-      videoJson.original_url = videoJson.url;
-      return createVideo(videoJson);
-    }) || [],
+    videos: playlistInfoJson.entries
+      ?.filter((entry: any) => entry.duration && entry.uploader && entry.channel)
+      ?.map((videoJson: any) => {
+        videoJson.original_url = videoJson.url;
+        return createVideo(videoJson);
+      }) || [],
     duplicateAnimation: false,
+    original_url: original_url?.split("&")[0] || null,
   };
 };
 

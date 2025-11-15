@@ -1,6 +1,6 @@
 <template lang="pug">
 template(v-if="largeScreen")
-  .wrapper(:class="{ 'duplicate-animation': duplicateAnimation }")
+  .wrapper(:class="{ 'duplicate-animation': duplicateAnimation }" :id="id")
     .video-card
       .progress-bar(:style="{ width: video.progress + '%' }")
       img.thumbnail(:src="video.thumbnailURL" :alt="`Thumbnail for ${video.title}`")
@@ -26,7 +26,7 @@ template(v-if="largeScreen")
     template(v-else-if="video.status")
       .status-text {{ video.status }}
 template(v-else)
-  .wrapper(:class="{ 'duplicate-animation': duplicateAnimation }")
+  .wrapper(:class="{ 'duplicate-animation': duplicateAnimation }" :id="id")
     .elements
       .title {{ video.fullTitle }}
       .video-card
@@ -68,6 +68,7 @@ defineEmits<{
 }>();
 const props = defineProps<{
   video: Video;
+  id?: string;
 }>();
 
 const { duplicateAnimation } = toRefs(props.video);
@@ -76,7 +77,7 @@ watch(duplicateAnimation, (newVal) => {
   if (newVal) {
     setTimeout(() => {
       props.video.duplicateAnimation = false;
-    }, 500);
+    }, 700);
   }
 });
 

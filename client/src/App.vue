@@ -86,7 +86,7 @@ const init_video_info = async (url: string) => {
       duplicatePlaylist.duplicateAnimation = true;
       return;
     }
-    addPlaylist(createPlaylist(videoInfoJson));
+    addPlaylist(createPlaylist(videoInfoJson, url));
   } else {
     const duplicateVideo = videos.value.find(v => v.id === videoInfoJson.id);
     if (duplicateVideo) {
