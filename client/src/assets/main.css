@@ -7,6 +7,22 @@
   font-weight: normal;
 }
 
+.icon {
+  vertical-align: middle;
+}
+
+.duplicate-animation {
+  animation: duplicate-flash 0.5s ease-in-out;
+}
+@keyframes duplicate-flash {
+  0%, 100% {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+  50% {
+    background-color: rgba(255, 255, 255, 0.3);
+  }
+}
+
 @media screen and (min-width: 600px) {
   #app {
     padding: 2rem;

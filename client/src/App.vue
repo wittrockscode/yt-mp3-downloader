@@ -25,8 +25,9 @@
         :key="index"
         :playlist="playlist"
         @remove-playlist-entry="(e) => removePlaylistEntry(playlist, e)"
-        @download-playlist-entry="(e) => download_video(e)"
-        @remove-playlist="(e) => removePlaylist(e)"
+        @download-playlist-entry="download_video"
+        @remove-playlist="removePlaylist"
+        @download-playlist="download_playlist"
       )
 </template>
 
@@ -36,7 +37,7 @@ import { ref } from 'vue';
 import { socket, sessionId } from "@/socket";
 import { generate_downloadable_file } from './composables/helper';
 import { useVideos, createVideo } from './composables/use-videos';
-import { usePlaylists, createPlaylist } from './composables/use-playlists';
+import { usePlaylists, createPlaylist, type Playlist } from './composables/use-playlists';
 import { useApi } from './composables/use-api';
 import VideoInput from './components/video-input.vue';
 import VideoCard from './components/video-card.vue';
@@ -116,6 +117,15 @@ const download_video = async (video: Video) => {
   const blob = await response.blob();
   video.blob = blob;
   generate_downloadable_file(blob, `${video.fullTitle}.mp3`);
+};
+
+const download_playlist = async (playlist: Playlist) => {
+  console.log("TODO")
+  return;
+  // if (playlist.blob) {
+  //   generate_downloadable_file(playlist.blob, `${playlist.title}.zip`);
+  //   return;
+  // }
 };
 
 </script>

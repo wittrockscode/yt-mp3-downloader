@@ -1,9 +1,10 @@
 <template lang="pug">
 .playlist-card(:class="{ 'duplicate-animation': duplicateAnimation }")
-  .controls
+  .header
     .title {{ fullTitle }}
-    button.remove-button(@click="$emit('remove-playlist', playlist)")
-      RemoveIcon.icon(width="24" height="24")
+    .controls
+      DownloadButton(:disabled="playlist.isDownloading" @download="$emit('download-playlist', playlist)" text="Full Playlist")
+      RemoveButton(@remove="$emit('remove-playlist', playlist)" :finished="playlist.downloadFinished" :disabled="removeDisabled")
   .videos
     VideoCard(
       v-for="(video, index) in playlist.videos"
@@ -20,11 +21,13 @@ import { toRefs, watch, computed, onMounted } from 'vue';
 import type { Playlist } from '@/composables/use-playlists';
 import type { Video } from '@/composables/use-videos';
 import VideoCard from './video-card.vue';
-import RemoveIcon from '../assets/remove.svg';
+import DownloadButton from './download-button.vue';
+import RemoveButton from './remove-button.vue';
 defineEmits<{
   (e: 'remove-playlist', value: Playlist): void;
   (e: 'remove-playlist-entry', value: Video): void;
   (e: 'download-playlist-entry', value: Video): void;
+  (e: 'download-playlist', value: Playlist): void;
 }>();
 const props = defineProps<{
   playlist: Playlist;
@@ -32,6 +35,10 @@ const props = defineProps<{
 
 const fullTitle = computed(() => {
   return `${props.playlist.title} ${props.playlist.creator ? `by ${props.playlist.creator}` : ''}`;
+});
+
+const removeDisabled = computed(() => {
+  return props.playlist.isDownloading || props.playlist.videos.some(video => video.isDownloading);
 });
 
 const { duplicateAnimation } = toRefs(props.playlist);
@@ -60,31 +67,19 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.duplicate-animation {
-  animation: duplicate-flash 0.5s ease-in-out;
-}
-@keyframes duplicate-flash {
-  0%, 100% {
-    background-color: rgba(255, 255, 255, 0.1);
-  }
-  50% {
-    background-color: rgba(255, 255, 255, 0.3);
-  }
-}
-
 .playlist-card {
   border-radius: 8px;
   padding: 0.5rem 1rem;
   margin-bottom: 16px;
   background-color: rgba(0,0,0,0.1);
 }
-.controls {
+.header {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
-  padding-bottom: 0.25rem;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
   border-bottom: 2px solid #868686;
 }
 .title {
@@ -92,27 +87,14 @@ onMounted(() => {
   font-weight: bold;
   color: #cacaca;
 }
-.remove-button {
-  background-color: rgba(255, 100, 100, 0.05);
-  border: none;
-  border-radius: 4px;
-  color: #FF2E63;
-  width: 2.5rem;
-}
 .videos {
   max-height: 15rem;
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: #555 transparent;
 }
-@media screen and (min-width: 600px) {
-  .remove-button {
-    transition: transform 0.1s ease-in-out, background-color 0.1s ease-in-out;
-  }
-  .remove-button:hover {
-    cursor: pointer;
-    background-color: rgba(255, 46, 99, 0.1);
-    transform: scale(1.05);
-  }
+.controls {
+  display: flex;
+  gap: 1rem;
 }
 </style>

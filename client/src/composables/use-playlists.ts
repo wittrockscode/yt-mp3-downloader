@@ -9,6 +9,12 @@ export type Playlist = {
   videos: Array<Video>;
   duplicateAnimation: boolean;
   original_url: string | null;
+  isDownloading: boolean;
+  progress: number;
+  downloadFinished: boolean;
+  error?: string | null;
+  status?: string | null;
+  blob?: Blob;
 };
 
 export const createPlaylist = (playlistInfoJson: any, original_url: string | null = null): Playlist => {
@@ -25,6 +31,11 @@ export const createPlaylist = (playlistInfoJson: any, original_url: string | nul
       }) || [],
     duplicateAnimation: false,
     original_url: original_url?.split("&")[0] || null,
+    isDownloading: false,
+    progress: 0,
+    downloadFinished: false,
+    error: null,
+    status: null,
   };
 };
 
