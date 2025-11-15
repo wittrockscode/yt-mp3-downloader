@@ -2,6 +2,7 @@ import cors from 'cors';
 import 'dotenv/config';
 import express from 'express';
 import download_route from './download';
+import download_playlist_route from './download_playlist';
 import info_route from './info';
 import http from 'http';
 import { Server } from "socket.io";
@@ -33,6 +34,7 @@ app.use(express.urlencoded({ extended: true }));
 const PORT = process.env.PORT || 3001;
 
 app.use("/api/download", download_route);
+app.use("/api/download_playlist", download_playlist_route);
 app.use("/api/info", info_route);
 
 server.listen(PORT, () => {

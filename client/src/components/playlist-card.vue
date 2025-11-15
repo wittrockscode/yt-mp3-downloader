@@ -1,10 +1,15 @@
 <template lang="pug">
 .playlist-card(:class="{ 'duplicate-animation': duplicateAnimation }")
+  ProgressBar(:progress="playlist.progress")
   .header
     .title {{ fullTitle }}
     .controls
       DownloadButton(:disabled="playlist.isDownloading" @download="$emit('download-playlist', playlist)" text="Full Playlist")
       RemoveButton(@remove="$emit('remove-playlist', playlist)" :finished="playlist.downloadFinished" :disabled="removeDisabled")
+  template(v-if="playlist.error")
+    .error-text {{ playlist.error }}
+  template(v-else-if="playlist.status")
+    .status-text {{ playlist.status }}
   .videos
     VideoCard(
       v-for="(video, index) in playlist.videos"
@@ -23,6 +28,7 @@ import type { Video } from '@/composables/use-videos';
 import VideoCard from './video-card.vue';
 import DownloadButton from './download-button.vue';
 import RemoveButton from './remove-button.vue';
+import ProgressBar from './progress-bar.vue';
 defineEmits<{
   (e: 'remove-playlist', value: Playlist): void;
   (e: 'remove-playlist-entry', value: Video): void;
@@ -67,11 +73,21 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.status-text {
+  color: #CACACA;
+  text-align: left;
+  margin-top: 0.5rem;
+}
+.error-text {
+  color: #FF2E63;
+  text-align: left;
+}
 .playlist-card {
   border-radius: 8px;
   padding: 0.5rem 1rem;
   margin-bottom: 16px;
   background-color: rgba(0,0,0,0.1);
+  position: relative;
 }
 .header {
   display: flex;

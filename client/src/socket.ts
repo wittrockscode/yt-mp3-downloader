@@ -74,4 +74,44 @@ socket.on("finished", (data: any) => {
   }
 });
 
+socket.on("playlist_initializing", (data: any) => {
+  const { id } = data.message;
+  const playlist = playlists.value.find((p) => p.id === id);
+  if (playlist) {
+    playlist.isDownloading = true;
+    playlist.progress = 0;
+    playlist.error = null;
+    playlist.status = "Initializing...";
+  }
+});
+
+socket.on("playlist_status", (data: any) => {
+  const { id, progress } = data.message;
+  const playlist = playlists.value.find((p) => p.id === id);
+  if (playlist) {
+    playlist.progress = progress;
+    playlist.status = `Downloading... ${progress.toFixed(2)}%`;
+  }
+});
+
+socket.on("playlist_dlfinished", (data: any) => {
+  const { id } = data.message;
+  const playlist = playlists.value.find((p) => p.id === id);
+  if (playlist) {
+    playlist.progress = 100;
+    playlist.status = "Processing...";
+  }
+});
+
+socket.on("playlist_finished", (data: any) => {
+  const { id } = data.message;
+  const playlist = playlists.value.find((p) => p.id === id);
+  if (playlist) {
+    playlist.isDownloading = false;
+    playlist.progress = 0;
+    playlist.downloadFinished = true;
+    playlist.status = null;
+  }
+});
+
 export { socket, sessionId, state };
