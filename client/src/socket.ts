@@ -7,7 +7,7 @@ import { generate_downloadable_file } from './composables/helper';
 
 const { videos } = useVideos();
 const { playlists } = usePlaylists();
-const { downloadPlaylistAsZip } = useApi();
+const { downloadPlaylistAsZip, downloadVideo } = useApi();
 
 const URL = import.meta.env.VITE_SERVER_URL ?? "http://localhost:3001";
 
@@ -64,12 +64,29 @@ socket.on("dlfinished", (data: any) => {
   }
 });
 
-socket.on("finished", (data: any) => {
+socket.on("error", (data: any) => {
+  const { id, error } = data.message;
+  const video = videos.value.find((v) => v.id === id) || playlists.value
+    .flatMap(p => p.videos)
+    .find((v) => v.id === id);
+  if (video) {
+    video.error = error;
+    video.isDownloading = false;
+    video.status = null;
+  }
+});
+
+socket.on("dl_ready", async (data: any) => {
   const { id } = data.message;
   const video = videos.value.find((v) => v.id === id) || playlists.value
     .flatMap(p => p.videos)
     .find((v) => v.id === id);
   if (video) {
+    video.status = "Preparing download...";
+    const response = await downloadVideo(video);
+    const blob = await response.blob();
+    video.blob = blob;
+    generate_downloadable_file(blob, `${video.title}.${video.format}`);
     video.isDownloading = false;
     video.progress = 0;
     video.downloadFinished = true;
@@ -109,13 +126,13 @@ socket.on("playlist_dl_ready", async (data: any) => {
   if (playlist) {
     playlist.status = "Preparing download...";
     const response = await downloadPlaylistAsZip(playlist);
+    const blob = await response.blob();
+    playlist.blob = blob;
+    generate_downloadable_file(blob, `${playlist.title}.zip`);
     playlist.isDownloading = false;
     playlist.progress = 0;
     playlist.downloadFinished = true;
     playlist.status = null;
-    const blob = await response.blob();
-    playlist.blob = blob;
-    generate_downloadable_file(blob, `${playlist.title}.zip`);
   }
 });
 

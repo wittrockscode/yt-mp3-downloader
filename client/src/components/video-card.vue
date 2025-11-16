@@ -9,8 +9,17 @@ template(v-if="largeScreen")
         .length
           ClockIcon.icon.clock(width="24" height="24")
           | {{ secondsToHms(video.length) }}
+        FormatDropdown(
+          @format-selected="formatSelected"
+          :id="`format-dropdown-${video.id}`"
+          :disabled="video.isDownloading || video.downloadFinished"
+        )
         DownloadButton(:disabled="video.isDownloading" @download="$emit('download-video', video)")
-        RemoveButton(@remove="$emit('remove-video', video)" :finished="video.downloadFinished" :disabled="video.isDownloading")
+        RemoveButton(
+          @remove="$emit('remove-video', video)"
+          :finished="video.downloadFinished"
+          :disabled="video.isDownloading"
+        )
     template(v-if="video.error")
       .error-text {{ video.error }}
     template(v-else-if="video.status")
@@ -44,7 +53,8 @@ import CheckIcon from '../assets/check.svg';
 import DownloadButton from './download-button.vue';
 import RemoveButton from './remove-button.vue';
 import ProgressBar from './progress-bar.vue';
-import { secondsToHms } from '@/composables/helper';
+import FormatDropdown from './format-dropdown.vue';
+import { secondsToHms, type AllowedFormats } from '@/composables/helper';
 defineEmits<{
   (e: 'remove-video', value: Video): void;
   (e: 'download-video', value: Video): void;
@@ -65,6 +75,10 @@ watch(duplicateAnimation, (newVal) => {
 });
 
 const largeScreen = window.matchMedia('(min-width: 600px)').matches;
+
+const formatSelected = (format: AllowedFormats) => {
+  props.video.format = format;
+};
 </script>
 
 <style scoped>

@@ -1,9 +1,9 @@
 import express from "express";
-import { Readable } from "stream";
+import { incorrectUrl, getYtDlpPath, ytdlpConfig } from "./misc";
+import { spawn } from "child_process";
 import fs from 'fs';
-import archiver from 'archiver';
 import sanitize from "sanitize-filename";
-import { ytdlp, ffmpeg, incorrectUrl } from "./misc";
+import archiver from 'archiver';
 
 const router = express.Router();
 
@@ -11,14 +11,12 @@ router.post("/dl", async (req, res) => {
   const { sessionId, id, title = 'playlist' } = req.body;
   const sockets = req.app.get("sockets");
   const socket = sockets.get(sessionId);
-  const dir = `./${sessionId}-${id}`;
+  const dir = `./downloads/${sessionId}-${id}`;
 
   if (!socket) return res.status(400).send('Invalid session ID, reload the page and try again.');
 
   const archive = archiver('zip', { zlib: { level: 9 } });
   archive.directory(dir, false);
-
-  socket.emit("playlist_finished", { message: { id } });
 
   res.attachment(`${sanitize(title)}.zip`);
   archive.pipe(res);
@@ -30,10 +28,10 @@ router.post("/dl", async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
-  const { sessionId, id, items } = req.body;
+  const { sessionId, id, items, format } = req.body;
   const sockets = req.app.get("sockets");
   const socket = sockets.get(sessionId);
-  const dir = `./${sessionId}-${id}`;
+  const dir = `./downloads/${sessionId}-${id}`;
 
   if (!socket) return res.status(400).send('Invalid session ID, reload the page and try again.');
   if (!items || !Array.isArray(items) || items.length === 0)
@@ -42,7 +40,7 @@ router.post('/', async (req, res) => {
 
   res.status(200).json({ status: 'Download started' });
 
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 
   let promises = [];
   let progress = 0;
@@ -53,61 +51,31 @@ router.post('/', async (req, res) => {
       item.title = sanitize(item.title);
       if (incorrectUrl(item.url)) continue;
 
-      let lastPercentage = 0;
-      const itemRatio = 1 / items.length;
+      promises.push(new Promise<void>((resolve, reject) => {
+        const config = ytdlpConfig(item.url, format, dir, item.title);
+        const proc = spawn(getYtDlpPath(), config);
 
-      const promise = new Promise(async (resolve, reject) => {
-        const filePath = `${dir}/${item.title}.mp4`;
-        ytdlp.downloadAsync(item.url, {
-          format: {
-            filter: 'audioandvideo',
-            type: 'mp4',
-            quality: 'highest',
-          },
-          output: filePath,
-          onProgress: (prog) => {
-            const diff = prog.percentage - lastPercentage;
-            lastPercentage = prog.percentage;
-            const itemProgress = diff / 2 / 100 * itemRatio;
-            progress += itemProgress;
-            socket.emit("playlist_status", {
-              message: {
-                id,
-                progress: Math.min(100, (progress + itemProgress) * 100),
-              }
-            });
-          }
-        }).then(() => {
-          ffmpeg(filePath).noVideo().format('mp3').on("error", (err) => {
-            socket.emit("playlist_error", { message: { id, error: err.message } });
-            reject(err);
-          }).save(`${filePath.replace('.mp4', '.mp3')}`).on("end", () => {
-            fs.unlink(filePath, (err) => {
-              if (err) {
-                socket.emit("playlist_error", { message: { id, error: err.message } });
-                reject(err);
-                return;
-              }
-              progress += 0.5 * itemRatio;
-              socket.emit("playlist_status", {
-                message: {
-                  id,
-                  progress: Math.min(100, (progress) * 100),
-                }
-              });
-              resolve(true);
-            });
-          }).on("error", (err) => {
-            socket.emit("playlist_error", { message: { id, error: err.message } });
-            reject(err);
-          });
-        }).catch((error) => {
-          socket.emit("playlist_error", { message: { id, error: error.message } });
-          reject(error);
+        proc.on("error", (err: any) => {
+          socket.emit("playlist_error", { message: { id, error: `Error downloading ${item.title}: ${err.message}` } });
+          reject();
         });
-      });
 
-      promises.push(promise);
+        proc.stdout.on("data", (chunk: any) => {
+          const line = chunk.toString();
+          const match = line.match(/^\s*([\d.]+)%\s+([\d.]+\w+)\s+([\d.]+\w+\/s)\s+([\d:]+)/);
+
+          if (match) {
+            const percent = parseFloat(match[1]);
+            const prog = (1 / items.length * (percent / 100)) * 100 + progress;
+            socket.emit("playlist_status", { message: { id, progress: prog } });
+          }
+        });
+
+        proc.on("close", () => {
+          progress += ((1 / items.length) * 100);
+          resolve();
+        });
+      }));
     }
   } catch (error) {
     socket.emit("playlist_error", { message: { id, error } });
@@ -118,7 +86,7 @@ router.post('/', async (req, res) => {
 
   setTimeout(() => {
     if (fs.existsSync(dir)) fs.rmSync(dir, { recursive: true, force: true });
-  }, 120000);
+  }, 60*60*1000);
 });
 
 export default router;

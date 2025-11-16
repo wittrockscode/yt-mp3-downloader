@@ -1,4 +1,5 @@
 import { ref } from "vue";
+import type { AllowedFormats } from "./helper";
 
 export type Video = {
   url: string;
@@ -15,6 +16,7 @@ export type Video = {
   blob?: Blob;
   fullTitle?: string;
   duplicateAnimation: boolean;
+  format: AllowedFormats;
 };
 
 const videoTemplate = (url: string, title: string, length: string, thumbnailURL: string, creator: string, id: string) => {
@@ -31,6 +33,7 @@ const videoTemplate = (url: string, title: string, length: string, thumbnailURL:
     id,
     fullTitle: creator ? `${title} - ${creator}` : title,
     duplicateAnimation: false,
+    format: "mp3",
   } as Video;
 };
 
