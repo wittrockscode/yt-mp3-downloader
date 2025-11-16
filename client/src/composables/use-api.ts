@@ -3,7 +3,7 @@ import type { Playlist } from "./use-playlists";
 import { sessionId } from "../socket";
 
 export const useApi = () => {
-  const downloadAsMp3 = async (video: Video) => {
+  const initVideoDownload = async (video: Video) => {
     return await fetch("/api/download", {
       method: "POST",
       headers: {
@@ -14,6 +14,7 @@ export const useApi = () => {
         sessionId,
         title: video.fullTitle,
         id: video.id,
+        format: video.format,
       }),
     });
   };
@@ -38,10 +39,25 @@ export const useApi = () => {
           title: video.fullTitle,
           id: video.id,
         })),
+        format: playlist.format,
       }),
     });
   };
 
+  const downloadVideo = async (video: Video) => {
+    return await fetch("/api/download/dl", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        id: video.id,
+        sessionId,
+        title: video.fullTitle,
+        format: video.format,
+      }),
+    });
+  };
 
   const downloadPlaylistAsZip = async (playlist: Playlist) => {
     return await fetch("/api/download_playlist/dl", {
@@ -57,5 +73,5 @@ export const useApi = () => {
     });
   }
 
-  return { downloadAsMp3, getVideoInfo, initPlaylistDownload, downloadPlaylistAsZip };
+  return { initVideoDownload, downloadVideo, getVideoInfo, initPlaylistDownload, downloadPlaylistAsZip };
 };

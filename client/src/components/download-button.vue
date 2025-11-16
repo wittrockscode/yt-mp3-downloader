@@ -5,7 +5,7 @@
       LoadingSpinner
     template(v-else)
       DownloadIcon.icon(width="24" height="24")
-      span.text {{ props.text || 'MP3' }}
+      span.text(v-if="props.text") {{ props.text }}
 </template>
 
 <script setup lang="ts">
@@ -21,6 +21,11 @@ const props = defineProps<{
 </script>
 
 <style scoped>
+.download-button {
+  height: 100%;
+  position: relative;
+  white-space: nowrap;
+}
 .text {
   margin-left: 0.5rem;
   font-weight: 600;
@@ -37,10 +42,7 @@ const props = defineProps<{
 @media screen and (min-width: 600px) {
   .button {
     transition: transform 0.1s ease-in-out, background-color 0.1s ease-in-out;
-    width: 4.5rem;
-  }
-  .check {
-    width: 2.5rem;
+    min-width: 2.5rem;
   }
   .button:hover {
     cursor: pointer;

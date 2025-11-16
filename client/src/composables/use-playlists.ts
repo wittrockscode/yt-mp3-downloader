@@ -1,5 +1,6 @@
 import { ref } from "vue";
 import { type Video, createVideo } from "./use-videos";
+import type { AllowedFormats } from "./helper";
 
 export type Playlist = {
   title: string;
@@ -15,6 +16,7 @@ export type Playlist = {
   error?: string | null;
   status?: string | null;
   blob?: Blob;
+  format: AllowedFormats;
 };
 
 export const createPlaylist = (playlistInfoJson: any, original_url: string | null = null): Playlist => {
@@ -36,6 +38,7 @@ export const createPlaylist = (playlistInfoJson: any, original_url: string | nul
     downloadFinished: false,
     error: null,
     status: null,
+    format: "mp3",
   };
 };
 

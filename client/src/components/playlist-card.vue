@@ -4,8 +4,21 @@
   .header
     .title {{ fullTitle }}
     .controls
-      DownloadButton(:disabled="playlist.isDownloading" @download="$emit('download-playlist', playlist)" text="Full Playlist")
-      RemoveButton(@remove="$emit('remove-playlist', playlist)" :finished="playlist.downloadFinished" :disabled="removeDisabled")
+      FormatDropdown(
+        @format-selected="formatSelected"
+        :id="`format-dropdown-playlist-${playlist.id}`"
+        :disabled="playlist.isDownloading || playlist.downloadFinished"
+      )
+      DownloadButton(
+        :disabled="playlist.isDownloading"
+        @download="$emit('download-playlist', playlist)"
+        text="Full Playlist"
+      )
+      RemoveButton(
+        @remove="$emit('remove-playlist', playlist)"
+        :finished="playlist.downloadFinished"
+        :disabled="removeDisabled"
+      )
   template(v-if="playlist.error")
     .error-text {{ playlist.error }}
   template(v-else-if="playlist.status")
@@ -29,6 +42,8 @@ import VideoCard from './video-card.vue';
 import DownloadButton from './download-button.vue';
 import RemoveButton from './remove-button.vue';
 import ProgressBar from './progress-bar.vue';
+import FormatDropdown from './format-dropdown.vue';
+import type { AllowedFormats } from '@/composables/helper';
 defineEmits<{
   (e: 'remove-playlist', value: Playlist): void;
   (e: 'remove-playlist-entry', value: Video): void;
@@ -57,6 +72,10 @@ watch(duplicateAnimation, (newVal) => {
   }
 });
 const largeScreen = window.matchMedia('(min-width: 600px)').matches;
+
+const formatSelected = (format: AllowedFormats) => {
+  props.playlist.format = format;
+};
 
 onMounted(() => {
   if (props.playlist.original_url) {
@@ -97,11 +116,16 @@ onMounted(() => {
   margin-bottom: 0.5rem;
   padding-bottom: 0.5rem;
   border-bottom: 2px solid #868686;
+  height: 3rem;
+  position: relative;
 }
 .title {
   font-size: 1.4rem;
   font-weight: bold;
   color: #cacaca;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .videos {
   max-height: 15rem;
@@ -112,5 +136,6 @@ onMounted(() => {
 .controls {
   display: flex;
   gap: 1rem;
+  height: 100%;
 }
 </style>

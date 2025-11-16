@@ -1,3 +1,5 @@
+export type AllowedFormats = "mp3" | "mp4";
+
 export const generate_downloadable_file = (blob: Blob, fileTitle: string) => {
   const newBlob = new Blob([blob]);
   const url = window.URL.createObjectURL(newBlob);
