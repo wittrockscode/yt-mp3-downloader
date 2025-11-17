@@ -1,4 +1,3 @@
-import { YtDlp } from "ytdlp-nodejs";
 import { path as ffmpegPath } from "@ffmpeg-installer/ffmpeg";
 import ffmpeg from "fluent-ffmpeg";
 import path from "path";
@@ -12,12 +11,8 @@ const incorrectUrl = (url: string | undefined) => {
   return !urlPattern.test(url);
 };
 
-const ytdlp = new YtDlp({
-  ffmpegPath: ffmpegPath,
-});
-
 const getYtDlpPath = () => {
-  const base = path.join(__dirname, "..", "binaries");
+  const base = path.join(__dirname, "..", "bin");
 
   switch (process.platform) {
     case "win32":
@@ -31,32 +26,34 @@ const getYtDlpPath = () => {
 
 const ytdlpConfig = (url: string, format: string, outDir: string, title: string) => {
   const mp4config = [
-      "--no-config",
-      "--newline",
-      "--progress",
-      "--progress-template",
-      "download:%(progress._percent_str)s %(progress._total_bytes_str)s %(progress._speed_str)s %(progress._eta_str)s",
-      url,
-      "-f", "bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4] / bv*+ba/b",
-      "--remux-video", "mp4",
-      "--ffmpeg-location", ffmpegPath,
-      "-o", `${outDir}/${sanitize(title)}.%(ext)s`,
-    ];
+    "--no-config",
+    "--newline",
+    "--progress",
+    "--progress-template",
+    "download:%(progress._percent_str)s %(progress._total_bytes_str)s %(progress._speed_str)s %(progress._eta_str)s",
+    url,
+    "-f", "bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4] / bv*+ba/b",
+    "--remux-video", "mp4",
+    "--ffmpeg-location", ffmpegPath,
+    "-o", `${outDir}/${sanitize(title)}.%(ext)s`,
+  ];
 
-    const mp3config = [
-      "--no-config",
-      "--newline",
-      "--progress",
-      "--progress-template",
-      "download:%(progress._percent_str)s %(progress._total_bytes_str)s %(progress._speed_str)s %(progress._eta_str)s",
-      url,
-      "-x",
-      "--audio-format", "mp3",
-      "--ffmpeg-location", ffmpegPath,
-      "-o", `${outDir}/${sanitize(title)}.%(ext)s`,
-    ];
+  const mp3config = [
+    "--no-config",
+    "--newline",
+    "--progress",
+    "--progress-template",
+    "download:%(progress._percent_str)s %(progress._total_bytes_str)s %(progress._speed_str)s %(progress._eta_str)s",
+    url,
+    "-x",
+    "--audio-format", "mp3",
+    "--ffmpeg-location", ffmpegPath,
+    "-o", `${outDir}/${sanitize(title)}.%(ext)s`,
+  ];
 
-    return format === 'mp4' ? mp4config : mp3config;
-}
+  return format === 'mp4' ? mp4config : mp3config;
+};
 
-export { ffmpeg, ytdlp, incorrectUrl, getYtDlpPath, ytdlpConfig, ffmpegPath };
+const timeouts: Map<string, NodeJS.Timeout> = new Map();
+
+export { ffmpeg, incorrectUrl, getYtDlpPath, ytdlpConfig, ffmpegPath, timeouts };

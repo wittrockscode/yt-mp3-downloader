@@ -1,5 +1,5 @@
 import express from "express";
-import { incorrectUrl, getYtDlpPath, ytdlpConfig } from "./misc";
+import { incorrectUrl, getYtDlpPath, ytdlpConfig, timeouts } from "./misc";
 import { spawn } from "child_process";
 import fs from 'fs';
 import sanitize from "sanitize-filename";
@@ -23,7 +23,9 @@ router.post("/dl", async (req, res) => {
   archive.finalize();
 
   archive.on('finish', () => {
-    fs.rmSync(dir, { recursive: true, force: true });
+    if (fs.existsSync(dir)) fs.rmSync(dir, { recursive: true, force: true });
+    clearTimeout(timeouts.get(`${sessionId}-${id}`));
+    timeouts.delete(`${sessionId}-${id}`);
   });
 });
 
@@ -84,9 +86,12 @@ router.post('/', async (req, res) => {
   await Promise.all(promises);
   socket.emit("playlist_dl_ready", { message: { id } });
 
-  setTimeout(() => {
-    if (fs.existsSync(dir)) fs.rmSync(dir, { recursive: true, force: true });
-  }, 60*60*1000);
+  timeouts.set(
+    `${sessionId}-${id}`,
+    setTimeout(() => {
+      if (fs.existsSync(dir)) fs.rmSync(dir, { recursive: true, force: true });
+    }, 60 * 60 * 1000)
+  );
 });
 
 export default router;
