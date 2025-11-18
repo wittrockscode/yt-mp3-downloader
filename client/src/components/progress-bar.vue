@@ -16,7 +16,7 @@ const props = defineProps<{
   height: 100%;
   top: 0;
   left: 0;
-  border-radius: 8px 0 0 8px;
+  border-radius: 8px;
   z-index: -1;
   opacity: 0.1;
 }

@@ -26,8 +26,8 @@ template(v-if="largeScreen")
       .status-text {{ video.status }}
 template(v-else)
   .wrapper(:class="{ 'duplicate-animation': duplicateAnimation }" :id="id")
-    ProgressBar(:progress="video.progress")
     .elements
+      ProgressBar(:progress="video.progress")
       .title {{ video.fullTitle }}
       .video-card
         img.thumbnail(:src="video.thumbnailURL" :alt="`Thumbnail for ${video.title}`")
@@ -104,12 +104,14 @@ const formatSelected = (format: AllowedFormats) => {
   display: flex;
   align-items: stretch;
   justify-content: space-between;
-  padding: 0.75rem;
+  padding: 0.25rem 0.75rem 0.75rem 0.75rem;
   position: relative;
 }
 .elements {
   background-color: rgba(255,255,255,0.05);
   border-radius: 8px;
+  padding-top: 0.25rem;
+  position: relative;
 }
 .thumbnail {
   width: 60px;
@@ -119,7 +121,7 @@ const formatSelected = (format: AllowedFormats) => {
 .title {
   margin: 0 1rem;
   color: #EAEAEA;
-  font-size: 1rem;
+  font-size: 1.05rem;
   font-weight: 500;
   align-self: center;
   overflow: hidden;
@@ -149,7 +151,11 @@ const formatSelected = (format: AllowedFormats) => {
   .video-card {
     background-color: rgba(255,255,255,0.05);
     border-radius: 8px;
+    padding: 0.75rem;
     gap: 1rem;
+  }
+  .elements {
+    padding-top: 0;
   }
 }
 </style>
