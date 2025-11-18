@@ -22,7 +22,7 @@ const props = defineProps<{
 
 <style scoped>
 .download-button {
-  height: 100%;
+  min-height: 2rem;
   position: relative;
   white-space: nowrap;
 }
@@ -40,6 +40,9 @@ const props = defineProps<{
   height: 100%;
 }
 @media screen and (min-width: 600px) {
+  .download-button {
+    height: 100%;
+  }
   .button {
     transition: transform 0.1s ease-in-out, background-color 0.1s ease-in-out;
     min-width: 2.5rem;

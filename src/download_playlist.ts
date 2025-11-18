@@ -46,6 +46,7 @@ router.post('/', async (req, res) => {
 
   let promises = [];
   let progress = 0;
+  let lastEmittedProgress = 0;
 
   try {
     for (let i = 0; i < items.length; i++) {
@@ -69,12 +70,16 @@ router.post('/', async (req, res) => {
           if (match) {
             const percent = parseFloat(match[1]);
             const prog = (1 / items.length * (percent / 100)) * 100 + progress;
-            socket.emit("playlist_status", { message: { id, progress: prog } });
+            if (prog - lastEmittedProgress >= 5 || prog >= 100) {
+              lastEmittedProgress = prog;
+              socket.emit("playlist_status", { message: { id, progress: prog } });
+            }
+
+            if (percent >= 100) progress += ((1 / items.length) * 100);
           }
         });
 
         proc.on("close", () => {
-          progress += ((1 / items.length) * 100);
           resolve();
         });
       }));

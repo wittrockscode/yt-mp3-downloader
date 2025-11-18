@@ -1,9 +1,6 @@
 import { path as ffmpegPath } from "@ffmpeg-installer/ffmpeg";
-import ffmpeg from "fluent-ffmpeg";
 import path from "path";
 import sanitize from "sanitize-filename";
-
-ffmpeg.setFfmpegPath(ffmpegPath);
 
 const incorrectUrl = (url: string | undefined) => {
   if (!url) return true;
@@ -56,4 +53,4 @@ const ytdlpConfig = (url: string, format: string, outDir: string, title: string)
 
 const timeouts: Map<string, NodeJS.Timeout> = new Map();
 
-export { ffmpeg, incorrectUrl, getYtDlpPath, ytdlpConfig, ffmpegPath, timeouts };
+export { incorrectUrl, getYtDlpPath, ytdlpConfig, ffmpegPath, timeouts };

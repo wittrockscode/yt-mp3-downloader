@@ -49,6 +49,7 @@ router.post('/', async (req, res) => {
 
     const config = ytdlpConfig(url, format, outDir, title);
     const proc = spawn(ytldpPath, config);
+    let lastEmittedProgress = 0;
 
     proc.on("error", (err: any) => {
       socket.emit("error", { message: { id, error: err.message } });
@@ -59,7 +60,10 @@ router.post('/', async (req, res) => {
       const match = line.match(/^\s*([\d.]+)%\s+([\d.]+\w+)\s+([\d.]+\w+\/s)\s+([\d:]+)/);
       if (match) {
         const percent = parseFloat(match[1]);
-        socket.emit("status", { message: { id, progress: percent } });
+        if (percent - lastEmittedProgress >= 5) {
+          lastEmittedProgress = percent;
+          socket.emit("status", { message: { id, progress: percent } });
+        }
 
         if (percent >= 100) {
           socket.emit("dlfinished", { message: { id } });

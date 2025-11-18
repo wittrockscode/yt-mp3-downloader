@@ -143,11 +143,6 @@ const download_playlist = async (playlist: Playlist) => {
   max-width: 95vw;
   width: 100%;
 }
-@media screen and (min-width: 600px) {
-  .content {
-    max-width: 50rem;
-  }
-}
 .title {
   text-align: left;
   font-size: 3rem;
@@ -159,7 +154,7 @@ const download_playlist = async (playlist: Playlist) => {
 .videos {
   margin-top: 2rem;
 }
-@media screen and (min-width: 600px) {
+@media screen and (min-width: 1024px) {
   .title {
     text-align: left;
     margin-top: 20px;
@@ -168,6 +163,9 @@ const download_playlist = async (playlist: Playlist) => {
     font-weight: bold;
     margin-bottom: 2rem;
     text-shadow: 0 0 1px #000;
+  }
+  .content {
+    max-width: 80vw;
   }
 }
 </style>

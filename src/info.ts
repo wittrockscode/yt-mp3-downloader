@@ -1,5 +1,5 @@
 import express from "express";
-import { incorrectUrl, getYtDlpPath, ytdlpConfig } from "./misc";
+import { incorrectUrl, getYtDlpPath } from "./misc";
 import { spawn } from "child_process";
 const router = express.Router();
 

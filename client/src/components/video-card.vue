@@ -34,6 +34,11 @@ template(v-else)
         .length
           ClockIcon.icon.clock(width="24" height="24")
           | {{ secondsToHms(video.length) }}
+        FormatDropdown(
+          @format-selected="formatSelected"
+          :id="`format-dropdown-${video.id}`"
+          :disabled="video.isDownloading || video.downloadFinished"
+        )
         DownloadButton(:disabled="video.isDownloading" @download="$emit('download-video', video)")
         RemoveButton(@remove="$emit('remove-video', video)" :finished="video.downloadFinished" :disabled="video.isDownloading")
     template(v-if="video.error")

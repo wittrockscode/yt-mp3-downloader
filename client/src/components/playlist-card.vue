@@ -103,20 +103,19 @@ onMounted(() => {
 }
 .playlist-card {
   border-radius: 8px;
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 0.5rem;
   margin-bottom: 16px;
   background-color: rgba(0,0,0,0.1);
   position: relative;
 }
 .header {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 0.5rem;
-  padding-bottom: 0.5rem;
+  padding-bottom: 1rem;
   border-bottom: 2px solid #868686;
-  height: 3rem;
   position: relative;
 }
 .title {
@@ -128,7 +127,7 @@ onMounted(() => {
   white-space: nowrap;
 }
 .videos {
-  max-height: 15rem;
+  max-height: 20rem;
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: #555 transparent;
@@ -137,5 +136,19 @@ onMounted(() => {
   display: flex;
   gap: 1rem;
   height: 100%;
+}
+@media screen and (min-width: 600px) {
+  .header {
+    flex-direction: row;
+    height: 3rem;
+    align-items: center;
+    padding-bottom: 0.5rem;
+  }
+  .playlist-card {
+    padding: 0.5rem 1rem;
+  }
+  .videos {
+    max-height: 15rem;
+  }
 }
 </style>
