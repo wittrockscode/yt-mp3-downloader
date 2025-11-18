@@ -2,9 +2,9 @@
 .app
   .content
     h1.title
-      | YouTube 2 audio
+      | Y2A - youtube
       br
-      | mp3 downloader
+      | downloader
     VideoInput(
       v-model="videoUrl"
       :loading="loading"

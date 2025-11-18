@@ -26,10 +26,10 @@ template(v-if="largeScreen")
       .status-text {{ video.status }}
 template(v-else)
   .wrapper(:class="{ 'duplicate-animation': duplicateAnimation }" :id="id")
+    ProgressBar(:progress="video.progress")
     .elements
       .title {{ video.fullTitle }}
       .video-card
-        ProgressBar(:progress="video.progress")
         img.thumbnail(:src="video.thumbnailURL" :alt="`Thumbnail for ${video.title}`")
         .length
           ClockIcon.icon.clock(width="24" height="24")
@@ -106,7 +106,6 @@ const formatSelected = (format: AllowedFormats) => {
   justify-content: space-between;
   padding: 0.75rem;
   position: relative;
-  gap: 1rem;
 }
 .elements {
   background-color: rgba(255,255,255,0.05);
@@ -150,6 +149,7 @@ const formatSelected = (format: AllowedFormats) => {
   .video-card {
     background-color: rgba(255,255,255,0.05);
     border-radius: 8px;
+    gap: 1rem;
   }
 }
 </style>

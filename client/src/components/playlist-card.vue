@@ -119,12 +119,14 @@ onMounted(() => {
   position: relative;
 }
 .title {
+  width: 100%;
   font-size: 1.4rem;
   font-weight: bold;
   color: #cacaca;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  text-align: center;
 }
 .videos {
   max-height: 20rem;
@@ -149,6 +151,9 @@ onMounted(() => {
   }
   .videos {
     max-height: 15rem;
+  }
+  .title {
+    text-align: left;
   }
 }
 </style>

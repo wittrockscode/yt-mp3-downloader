@@ -30,6 +30,7 @@ const selectedFormat = ref<AllowedFormats>('mp3');
     font-size: small;
     width: 100%;
     height: 100%;
+    min-width: 3.5rem;
   }
   option {
     background-color: #252A34;
